@@ -344,7 +344,7 @@ document.addEventListener('keydown',e=>{
 });
 // Top sites: read straight from the source file in chunks, so the page stays small.
 const SRC='https://raw.githubusercontent.com/danielmiessler/top-domains/refs/heads/main/alexa-top-1Million.txt';
-const CHUNK=250000,PAGE=600;
+const PAGE=600;let CHUNK=250000;
 const tdList=document.getElementById('tdl'),tdMore=document.getElementById('tdm'),tdNote=document.getElementById('tdn'),tdCount=document.getElementById('tdc');
 let doms=[],safe=[],safeN=0,pos=0,done=false,loading=false,err=false,shownN=PAGE,hits=[],term='',curShown=total;
 
@@ -363,8 +363,8 @@ function renderTD(){
     :'Most-visited domains in rank order, from the Alexa top 1 million list. Adult sites are hidden.';
   const more=hits.length>shownN;
   tdMore.hidden=!(more||!done);
-  tdMore.disabled=loading;
-  tdMore.textContent=loading?'Loading…':more?'Show more':err?'Try again':'Load more sites';
+  tdMore.disabled=loading&&!more;
+  tdMore.textContent=more?'Show more':loading?'Loading…':err?'Try again':'Load more sites';
   none.hidden=curShown>0||hits.length>0;
   n.textContent=term?(curShown+hits.length).toLocaleString():'1,000,000+';
 }
@@ -394,24 +394,32 @@ tdMore.addEventListener('click',()=>{
   else loadChunk();
 });
 
-
-// Random site: picks from the curated links plus the top 5,000 sites.
+// Adult-site filter, used by the Top sites list and the random button.
+// It is keyword and name based, so it is best effort, not a guarantee.
+// Random site: picks from every loaded site that passes the filters.
 const NSFW=/porn|xxx|sex|nude|naked|fuck|pussy|milf|tits|boob|bdsm|fetish|erotic|escort|slut|whore|tranny|shemale|hentai|nsfw|onlyfans|fansly|manyvids|chaturbate|bongacams|stripchat|livejasmin|myfreecams|camsoda|camwhore|cam4|xvideos|xnxx|xhamster|redtube|youporn|spankbang|eporner|brazzers|bangbros|realitykings|naughtyamerica|rule34|gelbooru|e621|nhentai|hitomi|hanime|wnacg|18comic|jmcomic|thisvid|motherless|literotica|fetlife|tnaflix|tube8|txxx|fapello|fapster|daftsex|sxyprn|luscious|missav|supjav|avgle|tokyomotion|8muses|imagefap|redgifs|sankaku|donmai|paheal|kink|clips4sale|adult|hotmovies|jizz|nutaku|dlsite|iwara|jable|(^|[.-])jav(?!a)/i;
 // Skip CDNs, ad networks and shorteners: they are in the top list but have no page to visit.
 const INFRA=/cdn|doubleclick|googlevideo|gstatic|googleapis|googlesyndication|googleadservices|amazonaws|akamai|cloudfront|twimg|ytimg|pinimg|ssl-images|media-amazon|licdn|bdstatic|qpic|hdslb|alicdn|sinaimg|adnxs|taboola|outbrain|criteo|exoclick|realsrv|windows\.net|azureedge|fbsbx|ggpht|nocookie|yimg|zhimg|bdimg|^t\.co$|^goo\.gl$|^bit\.ly$|^redd\.it$/i;
 const rnd=document.getElementById('rnd'),rs=document.getElementById('rs');
 rnd.addEventListener('click',()=>{
-  const pool=[];
-  secs.forEach(s=>s.links.forEach(a=>{if(!NSFW.test(a.dataset.k))pool.push(a.href);}));
-  doms.slice(0,5000).forEach(d=>{if(!NSFW.test(d)&&!INFRA.test(d))pool.push('https://'+d);});
-  const url=pool[Math.floor(Math.random()*pool.length)];
+  let url,tries=0;
+  while(!url&&safe.length&&tries++<200){
+    const d=safe[Math.floor(Math.random()*safe.length)];
+    if(!INFRA.test(d))url='https://'+d;
+  }
+  if(!url){ // list not loaded yet: fall back to the curated links
+    const pool=[];
+    secs.forEach(s=>s.links.forEach(a=>{if(!NSFW.test(a.dataset.k))pool.push(a.href);}));
+    url=pool[Math.floor(Math.random()*pool.length)];
+  }
   const l=document.createElement('a');
   l.href=url;l.target='_blank';l.rel='noopener noreferrer';l.click();
   rs.textContent='Opened '+url.replace(/^https:\/\//,'');
 });
 
 filter();
-loadChunk();
+// Show the first sites quickly, then pull in the rest of the list straight away.
+loadChunk().then(()=>{CHUNK=2e9;loadChunk();});
 </script>
 </body>
 </html>
