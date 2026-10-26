@@ -367,6 +367,7 @@ function renderTD(){
   tdMore.textContent=more?'Show more':loading?'Loading…':err?'Try again':'Load more sites';
   none.hidden=curShown>0||hits.length>0;
   n.textContent=term?(curShown+hits.length).toLocaleString():'1,000,000+';
+  fill();
 }
 
 async function loadChunk(){
@@ -388,6 +389,25 @@ async function loadChunk(){
   }catch(e){err=true}
   loading=false;renderTD();
 }
+
+// Infinite scroll: add the next batch whenever the bottom of the list is close.
+function fill(){
+  let added=false;
+  while(hits.length>shownN&&tdMore.getBoundingClientRect().top<innerHeight+800){
+    const f=document.createDocumentFragment();
+    hits.slice(shownN,shownN+PAGE).forEach(d=>{
+      const a=document.createElement('a');
+      a.href='https://'+d;a.target='_blank';a.rel='noopener noreferrer';a.textContent=d;f.append(a);
+    });
+    shownN+=PAGE;tdList.append(f);added=true;
+  }
+  if(!added)return;
+  const more=hits.length>shownN;
+  tdMore.hidden=!(more||!done);
+  tdMore.disabled=loading&&!more;
+  tdMore.textContent=more?'Show more':loading?'Loading…':err?'Try again':'Load more sites';
+}
+new IntersectionObserver(e=>{if(e[0].isIntersecting)fill();},{rootMargin:'800px'}).observe(tdMore);
 
 tdMore.addEventListener('click',()=>{
   if(hits.length>shownN){shownN+=PAGE;renderTD();}
