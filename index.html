@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link Dump</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,800&display=swap">
+<style>
+:root{--bg:#e8edf1;--ink:#14213d;--dim:#5b6780;--rule:#c3ccd6;--hl:#ffe14d;--onhl:#14213d;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#10151f;--ink:#e6ebf2;--dim:#8d9ab0;--rule:#2a3446;color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.4 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:2px solid var(--ink);padding:1rem clamp(1rem,4vw,3rem) .9rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem 2rem}
+h1{margin:0;font-weight:800;font-size:clamp(2rem,6vw,3.4rem);line-height:1;letter-spacing:-.03em}
+.sub{margin:0;color:var(--dim);font-size:.95rem;flex:1 1 16rem}
+input{flex:1 1 100%;font:inherit;font-size:1.1rem;color:var(--ink);background:transparent;border:0;border-bottom:2px solid var(--rule);padding:.5rem 0;outline:0}
+input:focus{border-bottom-color:var(--ink)}
+input::placeholder{color:var(--dim)}
+main{columns:15rem auto;column-gap:2.5rem;padding:1.5rem clamp(1rem,4vw,3rem) 4rem}
+section{break-inside:avoid;margin:0 0 2rem}
+h2{margin:0 0 .4rem;font-size:1.15rem;font-weight:800;letter-spacing:-.01em;border-bottom:1px solid var(--ink);padding-bottom:.25rem;display:flex;justify-content:space-between;gap:1rem}
+h2 small{font-weight:400;color:var(--dim);font-size:.85rem}
+a{display:block;color:var(--ink);text-decoration:none;padding:.15rem .35rem;margin:0 -.35rem;border-radius:2px}
+a:hover,a:focus-visible{background:var(--hl);color:var(--onhl);outline:0}
+a.top{box-shadow:inset 3px 0 0 var(--hl)}
+#td{padding:0 clamp(1rem,4vw,3rem) 3rem}
+#tdl{columns:15rem auto;column-gap:2.5rem}
+#tdl a{break-inside:avoid}
+#tdn{margin:.25rem 0 1rem;color:var(--dim);font-size:.9rem}
+#tdm{font:inherit;font-weight:800;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:2px;padding:.5rem 1rem;margin-top:1.5rem;cursor:pointer}
+#tdm:hover:not(:disabled),#tdm:focus-visible{background:var(--hl);color:var(--onhl);outline:0}
+#tdm:disabled{opacity:.5;cursor:default}
+#none{padding:2rem clamp(1rem,4vw,3rem);color:var(--dim)}
+footer{padding:0 clamp(1rem,4vw,3rem) 3rem;color:var(--dim);font-size:.85rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Link Dump</h1>
+  <p class="sub"><span id="n">0</span> links. Press / to filter, Enter to open the top match.</p>
+  <input id="q" type="search" placeholder="Filter by name or site" autocomplete="off" aria-label="Filter links">
+</header>
+<main id="m"></main>
+<p id="none" hidden>No links match. Try fewer letters.</p>
+<section id="td" aria-labelledby="tdh">
+  <h2 id="tdh">Top sites <small id="tdc"></small></h2>
+  <p id="tdn"></p>
+  <div id="tdl"></div>
+  <button id="tdm" type="button">Load more sites</button>
+</section>
+<footer>To add a link, put a line like <code>Name|example.com/path</code> in any list below.</footer>
+
+<script>
+// Each line is "Name|address" (no https://). Add, remove or reorder freely.
+const D=[
+["Reference & search",`Wikipedia|www.wikipedia.org
+Wiktionary|www.wiktionary.org
+Wayback Machine|web.archive.org
+Internet Archive|archive.org
+archive.today|archive.ph
+Google Scholar|scholar.google.com
+DuckDuckGo|duckduckgo.com
+Wolfram Alpha|www.wolframalpha.com
+Marginalia Search|search.marginalia.nu
+Wiby|wiby.me
+Project Gutenberg|www.gutenberg.org
+Open Library|openlibrary.org
+arXiv|arxiv.org
+Etymonline|www.etymonline.com
+Library of Congress|www.loc.gov
+Our World in Data|ourworldindata.org`],
+["News & reading",`AP News|apnews.com
+Reuters|www.reuters.com
+BBC News|www.bbc.com/news
+NPR|www.npr.org
+Al Jazeera|www.aljazeera.com
+Hacker News|news.ycombinator.com
+Lobsters|lobste.rs
+Techmeme|techmeme.com
+Ars Technica|arstechnica.com
+The Verge|www.theverge.com
+Wired|www.wired.com
+Slashdot|slashdot.org
+Reddit|www.reddit.com
+Quanta Magazine|www.quantamagazine.org
+Kottke|kottke.org
+Open Culture|www.openculture.com
+Boing Boing|boingboing.net`],
+["Developer",`GitHub|github.com
+GitHub Pages docs|pages.github.com
+MDN Web Docs|developer.mozilla.org
+Stack Overflow|stackoverflow.com
+Can I use|caniuse.com
+DevDocs|devdocs.io
+npm|www.npmjs.com
+PyPI|pypi.org
+Python docs|docs.python.org
+TypeScript|www.typescriptlang.org
+React|react.dev
+Rust docs|doc.rust-lang.org
+Go|go.dev
+Tailwind CSS|tailwindcss.com
+Vite|vite.dev
+regex101|regex101.com
+CodePen|codepen.io
+JSFiddle|jsfiddle.net
+Compiler Explorer|godbolt.org
+explainshell|explainshell.com
+crontab guru|crontab.guru
+cheat.sh|cheat.sh
+Shields.io|shields.io
+Docker Hub|hub.docker.com
+Linux man pages|man7.org/linux/man-pages
+Awesome lists|github.com/sindresorhus/awesome
+Vercel|vercel.com
+Netlify|www.netlify.com
+Cloudflare|www.cloudflare.com`],
+["Learn",`Khan Academy|www.khanacademy.org
+MIT OpenCourseWare|ocw.mit.edu
+Coursera|www.coursera.org
+edX|www.edx.org
+freeCodeCamp|www.freecodecamp.org
+The Odin Project|www.theodinproject.com
+CS50|cs50.harvard.edu
+3Blue1Brown|www.3blue1brown.com
+Crash Course|thecrashcourse.com
+Duolingo|www.duolingo.com
+Paul’s Online Math Notes|tutorial.math.lamar.edu
+Brilliant|brilliant.org
+LeetCode|leetcode.com
+Exercism|exercism.org
+Project Euler|projecteuler.net
+Nand2Tetris|www.nand2tetris.org
+Teach Yourself CS|teachyourselfcs.com`],
+["AI & data",`Claude|claude.ai
+Anthropic|www.anthropic.com
+ChatGPT|chatgpt.com
+Gemini|gemini.google.com
+Perplexity|www.perplexity.ai
+Hugging Face|huggingface.co
+Ollama|ollama.com
+LMArena|lmarena.ai
+Kaggle|www.kaggle.com
+Google Colab|colab.research.google.com
+ElevenLabs|elevenlabs.io
+Midjourney|www.midjourney.com`],
+["Design & assets",`Figma|www.figma.com
+Google Fonts|fonts.google.com
+Fontshare|www.fontshare.com
+Coolors|coolors.co
+Color Hunt|colorhunt.co
+Realtime Colors|www.realtimecolors.com
+Unsplash|unsplash.com
+Pexels|www.pexels.com
+Pixabay|pixabay.com
+Openverse|openverse.org
+Lucide icons|lucide.dev
+Heroicons|heroicons.com
+Font Awesome|fontawesome.com
+The Noun Project|thenounproject.com
+Excalidraw|excalidraw.com
+Photopea|www.photopea.com
+Squoosh|squoosh.app
+TinyPNG|tinypng.com
+SVGOMG|jakearchibald.github.io/svgomg/
+Haikei|haikei.app
+CSS Gradient|cssgradient.io
+Dribbble|dribbble.com
+Behance|www.behance.net
+Canva|www.canva.com`],
+["Everyday utilities",`Speedtest|www.speedtest.net
+Down for everyone or just me|downforeveryoneorjustme.com
+Google Translate|translate.google.com
+DeepL|www.deepl.com
+Time and Date|www.timeanddate.com
+World Time Buddy|www.worldtimebuddy.com
+iLovePDF|www.ilovepdf.com
+Smallpdf|smallpdf.com
+Diffchecker|www.diffchecker.com
+Online-Convert|www.online-convert.com
+Cobalt|cobalt.tools
+WeTransfer|wetransfer.com
+Pastebin|pastebin.com
+TinEye|tineye.com
+Desmos|www.desmos.com/calculator
+GeoGebra|www.geogebra.org
+Calculator.net|www.calculator.net
+VirusTotal|www.virustotal.com
+Google Maps|maps.google.com
+OpenStreetMap|www.openstreetmap.org
+Windy|www.windy.com
+Flightradar24|www.flightradar24.com
+MarineTraffic|www.marinetraffic.com
+National Weather Service|www.weather.gov`],
+["Privacy & security",`Have I Been Pwned|haveibeenpwned.com
+Privacy Guides|www.privacyguides.org
+EFF|www.eff.org
+Cover Your Tracks|coveryourtracks.eff.org
+Signal|signal.org
+Proton|proton.me
+Bitwarden|bitwarden.com
+uBlock Origin|ublockorigin.com
+Tor Project|www.torproject.org
+Firefox|www.mozilla.org/firefox
+Mullvad VPN|mullvad.net
+Let’s Encrypt|letsencrypt.org
+OWASP|owasp.org
+Krebs on Security|krebsonsecurity.com
+Shodan|www.shodan.io
+ToS;DR|tosdr.org
+JustDeleteMe|justdeleteme.xyz`],
+["Watch, listen, read",`YouTube|www.youtube.com
+Vimeo|vimeo.com
+Twitch|www.twitch.tv
+Kanopy|www.kanopy.com
+Tubi|tubitv.com
+Pluto TV|pluto.tv
+Letterboxd|letterboxd.com
+IMDb|www.imdb.com
+Rotten Tomatoes|www.rottentomatoes.com
+Spotify|open.spotify.com
+Bandcamp|bandcamp.com
+SoundCloud|soundcloud.com
+Radio Garden|radio.garden
+MusicBrainz|musicbrainz.org
+Discogs|www.discogs.com
+Genius|genius.com
+Last.fm|www.last.fm
+LibriVox|librivox.org
+Standard Ebooks|standardebooks.org
+Goodreads|www.goodreads.com`],
+["Games",`Steam|store.steampowered.com
+itch.io|itch.io
+GOG|www.gog.com
+Epic Games Store|store.epicgames.com
+Humble Bundle|www.humblebundle.com
+Chess.com|www.chess.com
+Lichess|lichess.org
+GeoGuessr|www.geoguessr.com
+Wordle|www.nytimes.com/games/wordle/index.html
+Speedrun.com|www.speedrun.com
+PCGamingWiki|www.pcgamingwiki.com
+HowLongToBeat|howlongtobeat.com
+Newgrounds|www.newgrounds.com
+BoardGameGeek|boardgamegeek.com
+Poki|poki.com
+Minecraft|www.minecraft.net`],
+["Science & space",`NASA|www.nasa.gov
+ESA|www.esa.int
+Astronomy Picture of the Day|apod.nasa.gov/apod/astropix.html
+Spot the Station|spotthestation.nasa.gov
+Eyes on the Solar System|eyes.nasa.gov
+Stellarium Web|stellarium-web.org
+Light Pollution Map|www.lightpollutionmap.info
+NOAA|www.noaa.gov
+USGS Earthquakes|earthquake.usgs.gov
+Nature|www.nature.com
+Science|www.science.org
+PubMed|pubmed.ncbi.nlm.nih.gov
+MathWorld|mathworld.wolfram.com
+PhET Simulations|phet.colorado.edu
+Periodic Table|ptable.com
+Universe Today|www.universetoday.com
+MedlinePlus|medlineplus.gov
+CDC|www.cdc.gov`],
+["Money & government",`USA.gov|www.usa.gov
+Vote.gov|vote.gov
+IRS|www.irs.gov
+CFPB|www.consumerfinance.gov
+FRED|fred.stlouisfed.org
+SEC EDGAR|www.sec.gov/edgar
+Investopedia|www.investopedia.com
+Yahoo Finance|finance.yahoo.com
+Wise|wise.com
+CamelCamelCamel|camelcamelcamel.com
+Slickdeals|slickdeals.net
+Wirecutter|www.nytimes.com/wirecutter
+eBay|www.ebay.com
+Etsy|www.etsy.com
+Craigslist|www.craigslist.org`],
+["Weird & fun",`The Useless Web|theuselessweb.com
+Random Wikipedia article|en.wikipedia.org/wiki/Special:Random
+Neal.fun|neal.fun
+Windows 93|www.windows93.net
+Shadertoy|www.shadertoy.com
+Zoomquilt|zoomquilt.org
+Eelslap|eelslap.com
+Hacker Typer|hackertyper.net
+The Pudding|pudding.cool
+Atlas Obscura|www.atlasobscura.com
+MapCrunch|www.mapcrunch.com
+Ben Eater|eater.net
+xkcd|xkcd.com
+The Oatmeal|theoatmeal.com
+SMBC|www.smbc-comics.com
+Dinosaur Comics|www.qwantz.com
+The Onion|theonion.com
+Snopes|www.snopes.com
+Know Your Meme|knowyourmeme.com
+TV Tropes|tvtropes.org
+SCP Foundation|scp-wiki.wikidot.com`]
+];
+
+const main=document.getElementById('m'),q=document.getElementById('q'),n=document.getElementById('n'),none=document.getElementById('none');
+const secs=D.map(([title,raw])=>{
+  const sec=document.createElement('section'),h=document.createElement('h2'),cnt=document.createElement('small');
+  h.append(title,cnt);sec.append(h);
+  const links=raw.trim().split('\n').map(line=>{
+    const [name,addr]=line.split('|'),a=document.createElement('a');
+    a.href='https://'+addr.trim();a.target='_blank';a.rel='noopener noreferrer';a.textContent=name;
+    a.dataset.k=(name+' '+addr).toLowerCase();sec.append(a);return a;
+  });
+  main.append(sec);
+  return {sec,cnt,links};
+});
+const total=secs.reduce((s,x)=>s+x.links.length,0);
+
+function filter(){
+  const t=q.value.trim().toLowerCase();let shown=0,first=null;
+  secs.forEach(({sec,cnt,links})=>{
+    let c=0;
+    links.forEach(a=>{
+      const ok=!t||a.dataset.k.includes(t);
+      a.hidden=!ok;a.classList.remove('top');
+      if(ok){c++;if(!first)first=a;}
+    });
+    sec.hidden=!c;cnt.textContent=c;shown+=c;
+  });
+  if(t&&first)first.classList.add('top');
+  n.textContent=t?shown+' of '+total:total;
+  curShown=shown;term=t;shownN=PAGE;renderTD();
+}
+q.addEventListener('input',filter);
+q.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){const a=document.querySelector('a.top');if(a)window.open(a.href,'_blank','noopener');}
+  if(e.key==='Escape'){q.value='';filter();q.blur();}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='/'&&document.activeElement!==q){e.preventDefault();q.focus();}
+});
+// Top sites: read straight from the source file in chunks, so the page stays small.
+const SRC='https://raw.githubusercontent.com/danielmiessler/top-domains/refs/heads/main/alexa-top-1Million.txt';
+const CHUNK=250000,PAGE=600;
+const tdList=document.getElementById('tdl'),tdMore=document.getElementById('tdm'),tdNote=document.getElementById('tdn'),tdCount=document.getElementById('tdc');
+let doms=[],pos=0,done=false,loading=false,err=false,shownN=PAGE,hits=[],term='',curShown=total;
+
+function renderTD(){
+  hits=term?doms.filter(d=>d.includes(term)):doms;
+  const f=document.createDocumentFragment();
+  hits.slice(0,shownN).forEach(d=>{
+    const a=document.createElement('a');
+    a.href='https://'+d;a.target='_blank';a.rel='noopener noreferrer';a.textContent=d;f.append(a);
+  });
+  tdList.replaceChildren(f);
+  tdCount.textContent=hits.length.toLocaleString()+(done?'':'+');
+  tdNote.textContent=err?'Couldn’t load the list. Check your connection, then try again.'
+    :term&&!done?'Searching the '+doms.length.toLocaleString()+' sites loaded so far. Load more to search further.'
+    :'Most-visited domains in rank order, from the Alexa top 1 million list.';
+  const more=hits.length>shownN;
+  tdMore.hidden=!(more||!done);
+  tdMore.disabled=loading;
+  tdMore.textContent=loading?'Loading…':more?'Show more':err?'Try again':'Load more sites';
+  none.hidden=curShown>0||hits.length>0;
+}
+
+async function loadChunk(){
+  if(loading||done)return;
+  loading=true;err=false;renderTD();
+  try{
+    const r=await fetch(SRC,{headers:{Range:'bytes='+pos+'-'+(pos+CHUNK-1)}});
+    if(r.status===416)done=true;
+    else if(!r.ok)throw new Error(r.status);
+    else{
+      const t=await r.text();
+      let body=t;
+      if(r.status===200){done=true;doms=[];pos=0;}            // server ignored Range: this is the whole file
+      else if(t.length>=CHUNK)body=t.slice(0,t.lastIndexOf('\n')+1);
+      else done=true;                                           // short chunk: end of file
+      pos+=body.length;
+      doms=doms.concat(body.split(/\r?\n/).filter(Boolean));
+    }
+  }catch(e){err=true}
+  loading=false;renderTD();
+}
+
+tdMore.addEventListener('click',()=>{
+  if(hits.length>shownN){shownN+=PAGE;renderTD();}
+  else loadChunk();
+});
+
+filter();
+loadChunk();
+</script>
+</body>
+</html>
